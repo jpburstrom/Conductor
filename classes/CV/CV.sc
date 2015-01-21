@@ -79,6 +79,7 @@ CV : Stream {
 			tabletSlider2D:	CVSyncProps(#[x, y]),
 			ezSlider:			CVSyncValue,
 			ezNumber:			CVSyncValue,
+            ezKnob:         CVSyncValue,
 			knob:			CVSyncInput,
 			button:			CVSyncValue,
 		);
@@ -89,9 +90,14 @@ CV : Stream {
 			#[
 			numberBox, slider, rangeSlider, slider2D, multiSliderView,
 			popUpMenu, listView,
-			tabletSlider2D, ezSlider, ezNumber, knob, button].collect { | name |
+			tabletSlider2D, ezSlider, ezNumber, ezKnob, knob, button].collect { | name |
 				if ( (class = gui.perform(name)).notNil) {
-					if(Main.versionAtLeast(3, 7)) { class = class.superclass };
+                    if(Main.versionAtLeast(3, 7) and: {
+                        //FIX for EZguis
+                        class.superclass != EZGui
+                    }) {
+                        class = class.superclass
+                    };
 					CV.viewDictionary.put(class, connectDictionary.at(name))
 				}
 			}
