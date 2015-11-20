@@ -1,0 +1,3 @@
++QtGUI {
+    *ezKnob { ^EZKnob }
+}
