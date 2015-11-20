@@ -71,8 +71,6 @@ CV : Stream {
 		var connectDictionary = (
 			numberBox:		CVSyncValue,
 			slider:			CVSyncInput,
-			rangeSlider:		CVSyncProps(#[lo, hi]),
-			slider2D:			CVSyncProps(#[x, y]),
 			multiSliderView:	CVSyncMulti,
 			popUpMenu:		SVSync,
 			listView:			SVSync,
@@ -82,15 +80,28 @@ CV : Stream {
             ezKnob:         CVSyncValue,
 			knob:			CVSyncInput,
 			button:			CVSyncValue,
+			textView:		CVSyncText,
+			textField:		CVSyncText,
+			staticText:		CVSyncText,
 		);
+
+		if (GUI.id == \qt) {
+			connectDictionary.rangeSlider = CVSyncProps(#[loValue, hiValue]);
+			connectDictionary.slider2D = CVSyncProps(#[xValue, yValue]);
+		} {
+			connectDictionary.rangeSlider = CVSyncProps(#[lo, hi]);
+			connectDictionary.slider2D = CVSyncProps(#[x, y]);
+		};
+
 		CV.viewDictionary = IdentityDictionary.new;
 
 		GUI.schemes.do { | gui|
 			var class;
 			#[
-			numberBox, slider, rangeSlider, slider2D, multiSliderView,
-			popUpMenu, listView,
-			tabletSlider2D, ezSlider, ezNumber, ezKnob, knob, button].collect { | name |
+				numberBox, slider, rangeSlider, slider2D, multiSliderView,
+				popUpMenu, listView, tabletSlider2D, ezSlider, ezNumber, ezKnob,
+				knob, button, textView, textField, staticText
+			].collect { | name |
 				if ( (class = gui.perform(name)).notNil) {
                     if(Main.versionAtLeast(3, 7) and: {
                         //FIX for EZguis
