@@ -4,11 +4,23 @@ method:: setControls
 Connects link::Classes/CV::s to named controls.
 
 argument:: args
-an link::Classes/Array:: of key/value pairs where keys represent the control-names and the values the CVs that are supposed to set values of the controls
+an link::Classes/Array:: of key/value pairs, where keys represent the control-names and the values are evaluated to set the values of the controls.
+
+The key/value pairs can be expressed in a few different ways:
+
+DEFINITIONLIST::
+## code::[label, cv]::
+|| on value change, code::cv::'s value is passed to the control.
+## code::[label [cv, expr]]::
+|| on code::cv:: value change, code::expr:: (a link::Classes/Function:: or anything responding to code::.value::) is evaluated and passed to the control.
+## code::[label [cvArray, expr]]::
+|| on value change of either of the link::Classes/CV::s in code::cvarray::, code::expr:: is evaluated.
+::
 
 code::
 (
-c = CV.new.sp(-20, -100, 120);
+a = CV(\freq);
+b = CV(\unipolar);
 p = NodeProxy.audio(s, 2);
 p.play; //play to hardware output, return a group with synths
 p.setControls([f: a, c: [b, { \freq.asSpec.map(b.input)}]]);
@@ -16,3 +28,4 @@ b.input_(0.5);
 p.source = { arg f=400, c = 400; PMOsc.ar(f , c, 4, 0, 0.1) };
 )
 ::
+
