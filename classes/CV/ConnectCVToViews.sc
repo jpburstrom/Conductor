@@ -1,9 +1,10 @@
 
 CVSync {
 	classvar <>all;
-	var <>cv, <>view;
+	classvar <>speedlimDur;
+	var <>cv, <>view, speedlim, speedlimRout;
 
-	*initClass {all = IdentityDictionary.new }
+	*initClass {all = IdentityDictionary.new; speedlimDur=0.03; }
 
 	*new { | cv, view | ^super.newCopyArgs(cv, view).init }
 
@@ -11,6 +12,17 @@ CVSync {
 	init {
 		this.linkToCV;
 		this.linkToView;
+		speedlim = false;
+		speedlimRout = Routine({
+			loop {
+				speedlimDur.wait;
+				if (cv.input != speedlim) {
+					this.prUpdateView;
+				};
+				speedlim = false;
+				\hang.yield;
+			}
+		});
 		this.update(cv, \synch);
 	}
 
@@ -26,7 +38,7 @@ CVSync {
 
 	update { | changer, what ...moreArgs |	// called when CV changes
 		switch( what,
-			\synch, { defer { view.value = cv.input }; }
+			\synch, { this.updateView ; }
 		);
 	}
 
@@ -37,28 +49,33 @@ CVSync {
 	}
 
 	remove { cv.removeDependant(this) }
+
+	updateView {
+		if (speedlim == false) {
+			this.prUpdateView;
+			speedlimRout.play;
+			speedlim = cv.input;
+		}
+	}
+
+	prUpdateView {
+		defer { view.value = cv.input }
+	}
+
+
 }
 
 CVSyncInput : CVSync {
-	update { | changer, what ...moreArgs |	// called when CV changes
-		switch( what,
-			\synch, { defer { view.value = cv.input }; }
-		);
-	}
 
-	value { cv.input = view.value }		// called when view changes
 }
 
 CVSyncValue : CVSync {				// used by NumberBox
 
-	update { | changer, what ...moreArgs |
-		switch( what,
-			\synch, { defer { view.value = cv.value }; }
-		);
-	}
-
 	value { cv.value = view.value }
 
+	prUpdateView {
+		 defer { view.value = cv.value };
+	}
 }
 
 CVSyncMulti : CVSync {
@@ -83,17 +100,16 @@ CVSyncProperty : CVSync {
 
 	*new { | cv, view, property | ^super.newCopyArgs(cv, view, property).init }
 
-	update { | changer, what ...moreArgs |
-		switch( what,
-			\synch, { defer { view.setProperty(property, cv.input) }; }
-		);
-	}
 
 	value { cv.input = view.getProperty(property) }
 
 	init {
 		this.linkToCV;
 		this.update(cv, \synch);
+	}
+
+	prUpdateView {
+		defer { view.setProperty(property, cv.input) }
 	}
 
 }
@@ -134,10 +150,15 @@ SVSync : CVSyncValue {
 
 	update { | changer, what ...moreArgs |
 		switch( what,
-			\synch, { defer { view.value = cv.value }; },
+			\synch, { this.updateView },
 			\items, { defer { view.items = cv.items }; }
 		);
 	}
+
+	prUpdateView {
+		defer  { view.value = cv.value };
+	}
+
 
 }
 
@@ -151,13 +172,14 @@ EVSync : CVSync {
 		view.onClose = CVSync
 	}
 
-	update { | changer, what ...moreArgs |	// called when CV changes
-		switch( what,
-			\synch, { defer { cv.evToView(view) } }
-		);
-	}
 
 	value { cv.viewToEV(view) }		// called when view changes
+
+
+	prUpdateView {
+		defer  { cv.evToView(view) }
+	}
+
 
 }
 
@@ -173,13 +195,11 @@ ConductorSync : CVSync {
 		view.onClose = CVSync;
 	}
 
-	update { | changer, what ...moreArgs |	// called when CV changes
-		switch( what,
-			\synch, { defer { view.value = cv.player.value } }
-		);
-	}
-
 	value { |m,c,v| if (view.value == 0) { cv.stop } { cv.play } }		// called when view changes
+
+	prUpdateView {
+		defer  { view.value = cv.player.value }
+	}
 
 }
 
@@ -189,11 +209,6 @@ ConductorSync : CVSync {
 CVSyncText : CVSync {
 	classvar <>valRound=0.01;
 
-	update { | changer, what ... moreArgs |
-		switch( what,
-			\synch, { defer { view.string = cv.value.collect(_.round(valRound)).asCompileString }; }
-		);
-	}
 
 	value {
 		var arr = view.string.interpret;
@@ -204,5 +219,9 @@ CVSyncText : CVSync {
 		})
 	}
 
+
+	prUpdateView {
+		defer  { view.string = cv.value.collect(_.round(valRound)).asCompileString };
+	}
 }
 
