@@ -49,7 +49,12 @@ CV : Stream {
 
 // split turns a multi-valued CV into an array of single-valued CV's
 	split {
-		^value.collect { |v| CV(spec, v) }
+		var specs;
+
+		if (spec.size > 1) {
+			specs = spec.split;
+			^value.collect { |v, i| CV(specs[i], v) }
+		}
 	}
 
 // Stream and Pattern support
