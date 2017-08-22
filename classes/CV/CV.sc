@@ -107,7 +107,7 @@ CV : Stream {
 				popUpMenu, listView, tabletSlider2D, ezSlider, ezNumber, ezKnob,
 				knob, button, textView, textField, staticText
 			].collect { | name |
-				if ( (class = gui.perform(name)).notNil) {
+                if ( (class = gui.tryPerform(name)).notNil) {
                     if(Main.versionAtLeast(3, 7) and: {
                         //FIX for EZguis
                         class.superclass != EZGui
